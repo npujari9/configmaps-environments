@@ -1,0 +1,48 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: configmap-environments
+  namespace: dev
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: configmap-environments
+  template:
+    metadata:
+      labels:
+        app: configmap-environments
+    spec:
+      containers:
+       - name: configmap-environments
+         image: configmapenvs:latest
+         imagePullPolicy: Never
+         ports:
+          - containerPort: 8080
+         resources:
+           limits:
+             cpu: "500m"
+             memory: "512Mi"
+           requests:
+             cpu: "250m"
+             memory: "256Mi"
+         env:
+          - name: SPRING_APPLICATION_JSON
+            valueFrom:
+              configMapKeyRef:
+                name: config-env-configmap
+                key: config.json
+      restartPolicy: Always
+---
+kind: Service
+apiVersion: v1
+metadata:
+  name: configmap-environments-service
+  namespace: dev
+spec:
+  type: NodePort
+  ports:
+    - port: 8080
+      targetPort: 8080
+  selector:
+    app: configmap-environments
